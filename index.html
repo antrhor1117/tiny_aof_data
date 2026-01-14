@@ -251,24 +251,46 @@
         
         .summary-section {
             margin-top: 20px;
-            padding: 15px;
+            padding: 20px;
             background: #f8f9fa;
             border-radius: 8px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .summary-section.total-section {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-left: 5px solid #667eea;
+        }
+        
+        .summary-section.partner-section {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-left: 5px solid #ff9800;
+        }
+        
+        .summary-section.real-section {
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+            border-left: 5px solid #00bcd4;
         }
         
         .summary-section h3 {
             color: #333;
             margin-bottom: 15px;
-            font-size: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .summary-row-title {
             font-weight: bold;
             color: #667eea;
-            font-size: 14px;
-            margin-top: 15px;
+            font-size: 13px;
+            margin-top: 12px;
             margin-bottom: 8px;
-            padding-left: 5px;
+            padding: 8px 10px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 5px;
             border-left: 4px solid #667eea;
         }
         
@@ -278,34 +300,49 @@
         
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
             font-size: 13px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         
         .summary-item {
             background: white;
-            padding: 12px;
-            border-radius: 5px;
+            padding: 12px 15px;
+            border-radius: 6px;
             border-left: 3px solid #667eea;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .summary-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
         }
         
         .summary-item.total {
-            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-            border-left: 3px solid #e17055;
+            background: linear-gradient(135deg, #fff9e6 0%, #ffe9a3 100%);
+            border-left: 4px solid #f39c12;
             font-weight: bold;
         }
         
         .summary-item.total strong {
-            color: #d63031;
+            color: #e67e22;
         }
         
         .summary-item strong {
             display: block;
             color: #667eea;
             margin-bottom: 5px;
-            font-size: 12px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .summary-item div {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
         }
     </style>
 </head>
@@ -315,7 +352,7 @@
         <div class="subtitle">
             統計週期: 20251213-20251221 至 20260105-20260111 (4週)
             <br>
-            產出時間: 2026-01-14 16:06:46
+            產出時間: 2026-01-14 16:14:02
         </div>
         
         <div class="week-selector">
@@ -346,182 +383,182 @@
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section total-section">
                 <h3>📊 總體數據匯總</h3>
                 
-                <div class="summary-row-title">服務費</div>
+                <div class="summary-row-title">💰 服務費</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <strong>AFH 服務費</strong>
-                        $9,929,506.59
+                        <div>$9,929,506.59</div>
                     </div>
                     <div class="summary-item">
                         <strong>AFO 服務費</strong>
-                        $97.62
+                        <div>$97.62</div>
                     </div>
                     <div class="summary-item total">
                         <strong>總服務費</strong>
-                        $9,929,604.21
+                        <div>$9,929,604.21</div>
                     </div>
                 </div>
                 
-                <div class="summary-row-title">輸贏</div>
+                <div class="summary-row-title">📈 輸贏</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <strong>AFH 輸贏</strong>
-                        $-9,929,506.59
+                        <div>$-9,929,506.59</div>
                     </div>
                     <div class="summary-item">
                         <strong>AFO 輸贏</strong>
-                        $-97.62
+                        <div>$-97.62</div>
                     </div>
                     <div class="summary-item total">
                         <strong>總輸贏</strong>
-                        $-9,929,604.21
+                        <div>$-9,929,604.21</div>
                     </div>
                 </div>
                 
-                <div class="summary-row-title">水前輸贏</div>
+                <div class="summary-row-title">💵 水前輸贏</div>
                 <div class="summary-grid">
                     <div class="summary-item total">
                         <strong>總水前輸贏</strong>
-                        $-0.00
+                        <div>$-0.00</div>
                     </div>
                 </div>
                 
-                <div class="summary-row-title">手數</div>
+                <div class="summary-row-title">🎮 手數</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <strong>AFH 手數</strong>
-                        2,478,275
+                        <div>2,478,275</div>
                     </div>
                     <div class="summary-item">
                         <strong>AFO 手數</strong>
-                        538
+                        <div>538</div>
                     </div>
                     <div class="summary-item total">
                         <strong>總手數</strong>
-                        2,478,813
+                        <div>2,478,813</div>
                     </div>
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section partner-section">
                 <h3>🤝 合作夥伴數據</h3>
                 
-                <div class="summary-row-title">服務費</div>
+                <div class="summary-row-title">💰 服務費</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <strong>AFH 服務費</strong>
-                        $6,507,505.89
+                        <div>$6,507,505.89</div>
                     </div>
                     <div class="summary-item">
                         <strong>AFO 服務費</strong>
-                        $0.00
+                        <div>$0.00</div>
                     </div>
                     <div class="summary-item total">
                         <strong>總服務費</strong>
-                        $6,507,505.89
+                        <div>$6,507,505.89</div>
                     </div>
                 </div>
                 
-                <div class="summary-row-title">輸贏</div>
+                <div class="summary-row-title">📈 輸贏</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <strong>AFH 輸贏</strong>
-                        $-5,966,358.67
+                        <div>$-5,966,358.67</div>
                     </div>
                     <div class="summary-item">
                         <strong>AFO 輸贏</strong>
-                        $0.00
+                        <div>$0.00</div>
                     </div>
                     <div class="summary-item total">
                         <strong>總輸贏</strong>
-                        $-5,966,358.67
+                        <div>$-5,966,358.67</div>
                     </div>
                 </div>
                 
-                <div class="summary-row-title">水前輸贏</div>
+                <div class="summary-row-title">💵 水前輸贏</div>
                 <div class="summary-grid">
                     <div class="summary-item total">
                         <strong>總水前輸贏</strong>
-                        $541,147.22
+                        <div>$541,147.22</div>
                     </div>
                 </div>
                 
-                <div class="summary-row-title">手數</div>
+                <div class="summary-row-title">🎮 手數</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <strong>AFH 手數</strong>
-                        1,723,418
+                        <div>1,723,418</div>
                     </div>
                     <div class="summary-item">
                         <strong>AFO 手數</strong>
-                        0
+                        <div>0</div>
                     </div>
                     <div class="summary-item total">
                         <strong>總手數</strong>
-                        1,723,418
+                        <div>1,723,418</div>
                     </div>
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section real-section">
                 <h3>👥 真人玩家數據</h3>
                 
-                <div class="summary-row-title">服務費</div>
+                <div class="summary-row-title">💰 服務費</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <strong>AFH 服務費</strong>
-                        $3,422,000.70
+                        <div>$3,422,000.70</div>
                     </div>
                     <div class="summary-item">
                         <strong>AFO 服務費</strong>
-                        $97.62
+                        <div>$97.62</div>
                     </div>
                     <div class="summary-item total">
                         <strong>總服務費</strong>
-                        $3,422,098.32
+                        <div>$3,422,098.32</div>
                     </div>
                 </div>
                 
-                <div class="summary-row-title">輸贏</div>
+                <div class="summary-row-title">📈 輸贏</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <strong>AFH 輸贏</strong>
-                        $-3,963,147.92
+                        <div>$-3,963,147.92</div>
                     </div>
                     <div class="summary-item">
                         <strong>AFO 輸贏</strong>
-                        $-97.62
+                        <div>$-97.62</div>
                     </div>
                     <div class="summary-item total">
                         <strong>總輸贏</strong>
-                        $-3,963,245.54
+                        <div>$-3,963,245.54</div>
                     </div>
                 </div>
                 
-                <div class="summary-row-title">水前輸贏</div>
+                <div class="summary-row-title">💵 水前輸贏</div>
                 <div class="summary-grid">
                     <div class="summary-item total">
                         <strong>總水前輸贏</strong>
-                        $-541,147.22
+                        <div>$-541,147.22</div>
                     </div>
                 </div>
                 
-                <div class="summary-row-title">手數</div>
+                <div class="summary-row-title">🎮 手數</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <strong>AFH 手數</strong>
-                        754,857
+                        <div>754,857</div>
                     </div>
                     <div class="summary-item">
                         <strong>AFO 手數</strong>
-                        538
+                        <div>538</div>
                     </div>
                     <div class="summary-item total">
                         <strong>總手數</strong>
-                        755,395
+                        <div>755,395</div>
                     </div>
                 </div>
             </div>
@@ -18591,7 +18628,7 @@
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section total-section">
                 <h3>📊 總體數據匯總 - Week 1 (20260105-20260111)</h3>
                 
                 <div class="summary-row-title">服務費</div>
@@ -18651,7 +18688,7 @@
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section partner-section">
                 <h3>🤝 合作夥伴數據 - Week 1 (20260105-20260111)</h3>
                 
                 <div class="summary-row-title">服務費</div>
@@ -18711,7 +18748,7 @@
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section real-section">
                 <h3>👥 真人玩家數據 - Week 1 (20260105-20260111)</h3>
                 
                 <div class="summary-row-title">服務費</div>
@@ -27078,7 +27115,7 @@
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section total-section">
                 <h3>📊 總體數據匯總 - Week 2 (20251229-20260104)</h3>
                 
                 <div class="summary-row-title">服務費</div>
@@ -27138,7 +27175,7 @@
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section partner-section">
                 <h3>🤝 合作夥伴數據 - Week 2 (20251229-20260104)</h3>
                 
                 <div class="summary-row-title">服務費</div>
@@ -27198,7 +27235,7 @@
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section real-section">
                 <h3>👥 真人玩家數據 - Week 2 (20251229-20260104)</h3>
                 
                 <div class="summary-row-title">服務費</div>
@@ -35259,7 +35296,7 @@
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section total-section">
                 <h3>📊 總體數據匯總 - Week 3 (20251222-20251228)</h3>
                 
                 <div class="summary-row-title">服務費</div>
@@ -35319,7 +35356,7 @@
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section partner-section">
                 <h3>🤝 合作夥伴數據 - Week 3 (20251222-20251228)</h3>
                 
                 <div class="summary-row-title">服務費</div>
@@ -35379,7 +35416,7 @@
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section real-section">
                 <h3>👥 真人玩家數據 - Week 3 (20251222-20251228)</h3>
                 
                 <div class="summary-row-title">服務費</div>
@@ -43797,7 +43834,7 @@
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section total-section">
                 <h3>📊 總體數據匯總 - Week 4 (20251213-20251221)</h3>
                 
                 <div class="summary-row-title">服務費</div>
@@ -43857,7 +43894,7 @@
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section partner-section">
                 <h3>🤝 合作夥伴數據 - Week 4 (20251213-20251221)</h3>
                 
                 <div class="summary-row-title">服務費</div>
@@ -43917,7 +43954,7 @@
                 </div>
             </div>
             
-            <div class="summary-section">
+            <div class="summary-section real-section">
                 <h3>👥 真人玩家數據 - Week 4 (20251213-20251221)</h3>
                 
                 <div class="summary-row-title">服務費</div>
