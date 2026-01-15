@@ -1,0 +1,2208 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>俱樂部總水詳細數據報表</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .week-selector {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .week-selector label {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-right: 10px;
+        }
+        
+        .week-selector select {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            min-width: 250px;
+            font-weight: bold;
+        }
+        
+        .week-selector select:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        
+        .data-section {
+            display: none;
+        }
+        
+        .data-section.active {
+            display: block;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-card.partner {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .stat-card.real {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .controls label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .controls select, .controls input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .controls button {
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        .controls button:hover {
+            background: #5568d3;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        
+        th:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+        }
+        
+        th.sortable::after {
+            content: ' ⇅';
+            opacity: 0.5;
+        }
+        
+        th.sort-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+        
+        th.sort-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+        
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .partner-row {
+            background-color: #fff3cd;
+        }
+        
+        .partner-row:hover {
+            background-color: #ffe69c;
+        }
+        
+        .partner-badge {
+            display: inline-block;
+            background: #f5576c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .number-positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .number-neutral {
+            color: #666;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .summary-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .summary-section.total-section {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-left: 5px solid #667eea;
+        }
+        
+        .summary-section.partner-section {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-left: 5px solid #ff9800;
+        }
+        
+        .summary-section.real-section {
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+            border-left: 5px solid #00bcd4;
+        }
+        
+        .summary-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .summary-row-title {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 13px;
+            margin-top: 12px;
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .summary-row-title:first-of-type {
+            margin-top: 0;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+        
+        .summary-item {
+            background: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .summary-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+        
+        .summary-item.total {
+            background: linear-gradient(135deg, #fff9e6 0%, #ffe9a3 100%);
+            border-left: 4px solid #f39c12;
+            font-weight: bold;
+        }
+        
+        .summary-item.total strong {
+            color: #e67e22;
+        }
+        
+        .summary-item strong {
+            display: block;
+            color: #667eea;
+            margin-bottom: 5px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .summary-item div {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏛️ 俱樂部總水詳細數據報表</h1>
+        <div class="subtitle">
+            統計週期: 20251213-20251221 至 20260105-20260111 (4週)
+            <br>
+            產出時間: 2026-01-15 07:32:35
+        </div>
+        
+        <div class="week-selector">
+            <label for="weekSelect">📅 選擇週期：</label>
+            <select id="weekSelect" onchange="switchWeek(this.value)">
+                <option value="total">總和 (4週)</option>
+                    <option value="20251213-20251221">Week 1 (20251213-20251221)</option>
+                    <option value="20251222-20251228">Week 2 (20251222-20251228)</option>
+                    <option value="20251229-20260104">Week 3 (20251229-20260104)</option>
+                    <option value="20260105-20260111">Week 4 (20260105-20260111)</option>
+            </select>
+        </div>
+
+        <!-- 總和數據區塊 -->
+        <div id="data-total" class="data-section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">總俱樂部數</div>
+                    <div class="stat-value">22</div>
+                </div>
+                <div class="stat-card partner">
+                    <div class="stat-label">合作夥伴</div>
+                    <div class="stat-value">5</div>
+                </div>
+                <div class="stat-card real">
+                    <div class="stat-label">真人俱樂部</div>
+                    <div class="stat-value">17</div>
+                </div>
+            </div>
+            
+            <div class="summary-section total-section">
+                <h3>📊 總體數據匯總</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$18,201,276.43</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$9,929,604.21</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$2,141,026.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$30,271,906.64</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-section partner-section">
+                <h3>🤝 合作夥伴數據</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$10,904,303.08</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$6,507,505.89</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$1,782,816.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$19,194,624.97</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-section real-section">
+                <h3>👥 真人俱樂部數據</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$7,296,973.35</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$3,422,098.32</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$358,210.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$11,077,281.67</div>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="controls">
+                <label>篩選:</label>
+                <select id="filterType-total" onchange="filterTable('total')">
+                    <option value="all">全部俱樂部</option>
+                    <option value="partner">僅合作夥伴</option>
+                    <option value="real">僅真人俱樂部</option>
+                </select>
+                
+                <label>搜尋:</label>
+                <input type="text" id="searchInput-total" oninput="filterTable('total')" placeholder="輸入俱樂部名稱或ID...">
+                
+                <button onclick="resetTable('total')">重置</button>
+                
+                <span style="margin-left: auto; color: #666;">
+                    顯示: <span id="displayCount-total">22</span> / 22 個俱樂部
+                </span>
+            </div>
+            
+            <div class="table-container">
+                <table id="dataTable-total">
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortTable('total', 0)">#</th>
+                            <th class="sortable" onclick="sortTable('total', 1)">俱樂部ID</th>
+                            <th class="sortable" onclick="sortTable('total', 2)">俱樂部名稱</th>
+                            <th class="sortable" onclick="sortTable('total', 3)">NLH+PLO</th>
+                            <th class="sortable" onclick="sortTable('total', 4)">AOF</th>
+                            <th class="sortable" onclick="sortTable('total', 5)">SNG</th>
+                            <th class="sortable" onclick="sortTable('total', 6)">MTT</th>
+                            <th class="sortable" onclick="sortTable('total', 7)">總服務費</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>1</td>
+                            <td>717512</td>
+                            <td>TiNY POKER C (合作夥伴)<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="4524282.639999996"><span class="number-positive">$4,524,282.64</span></td>
+                            <td data-value="1562285.8499999992"><span class="number-positive">$1,562,285.85</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="1331404.0"><span class="number-positive">$1,331,404.00</span></td>
+                            <td data-value="7417972.489999994"><span class="number-positive">$7,417,972.49</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>2</td>
+                            <td>909051</td>
+                            <td>Lucky Beans Tiny<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="3831587.3199999994"><span class="number-positive">$3,831,587.32</span></td>
+                            <td data-value="3261222.7499999986"><span class="number-positive">$3,261,222.75</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="7092810.070000004"><span class="number-positive">$7,092,810.07</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>3</td>
+                            <td>951843</td>
+                            <td>Tiny2Pair<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="1358806.689999998"><span class="number-positive">$1,358,806.69</span></td>
+                            <td data-value="1207825.93"><span class="number-positive">$1,207,825.93</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="303960.0"><span class="number-positive">$303,960.00</span></td>
+                            <td data-value="2870592.620000001"><span class="number-positive">$2,870,592.62</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>4</td>
+                            <td>954109</td>
+                            <td>快樂呱Tiny</td>
+                            <td data-value="1175148.19"><span class="number-positive">$1,175,148.19</span></td>
+                            <td data-value="1610885.7499999995"><span class="number-positive">$1,610,885.75</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="55358.0"><span class="number-positive">$55,358.00</span></td>
+                            <td data-value="2841391.940000002"><span class="number-positive">$2,841,391.94</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>5</td>
+                            <td>781872</td>
+                            <td>海王CLUB TiNY</td>
+                            <td data-value="1239500.2799999986"><span class="number-positive">$1,239,500.28</span></td>
+                            <td data-value="430317.14999999997"><span class="number-positive">$430,317.15</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="41456.0"><span class="number-positive">$41,456.00</span></td>
+                            <td data-value="1711273.4299999997"><span class="number-positive">$1,711,273.43</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>6</td>
+                            <td>777080</td>
+                            <td>TiNY POKER (合作夥伴)<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="845280.4700000004"><span class="number-positive">$845,280.47</span></td>
+                            <td data-value="267137.75999999995"><span class="number-positive">$267,137.76</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="147452.0"><span class="number-positive">$147,452.00</span></td>
+                            <td data-value="1259870.2299999997"><span class="number-positive">$1,259,870.23</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>7</td>
+                            <td>356185</td>
+                            <td>天翔Gotiny</td>
+                            <td data-value="434952.05000000016"><span class="number-positive">$434,952.05</span></td>
+                            <td data-value="597569.2899999999"><span class="number-positive">$597,569.29</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="16396.0"><span class="number-positive">$16,396.00</span></td>
+                            <td data-value="1048917.3399999999"><span class="number-positive">$1,048,917.34</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>8</td>
+                            <td>177747</td>
+                            <td>高機能組Tiny</td>
+                            <td data-value="670027.7000000008"><span class="number-positive">$670,027.70</span></td>
+                            <td data-value="202470.15000000002"><span class="number-positive">$202,470.15</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="49158.0"><span class="number-positive">$49,158.00</span></td>
+                            <td data-value="921655.8500000016"><span class="number-positive">$921,655.85</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>9</td>
+                            <td>993970</td>
+                            <td>TPA Tiny</td>
+                            <td data-value="585795.5499999999"><span class="number-positive">$585,795.55</span></td>
+                            <td data-value="207993.52"><span class="number-positive">$207,993.52</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="13352.0"><span class="number-positive">$13,352.00</span></td>
+                            <td data-value="807141.0699999997"><span class="number-positive">$807,141.07</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>10</td>
+                            <td>864497</td>
+                            <td>Tiny Peach Poker</td>
+                            <td data-value="546578.0099999999"><span class="number-positive">$546,578.01</span></td>
+                            <td data-value="144623.18000000002"><span class="number-positive">$144,623.18</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="7644.0"><span class="number-positive">$7,644.00</span></td>
+                            <td data-value="698845.1900000001"><span class="number-positive">$698,845.19</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>11</td>
+                            <td>777080</td>
+                            <td>TiNY POKER (真人)</td>
+                            <td data-value="571692.3900000006"><span class="number-positive">$571,692.39</span></td>
+                            <td data-value="28611.519999999986"><span class="number-positive">$28,611.52</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="84688.0"><span class="number-positive">$84,688.00</span></td>
+                            <td data-value="684991.9100000003"><span class="number-positive">$684,991.91</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>12</td>
+                            <td>781373</td>
+                            <td>Tiny Boba island<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="344345.9600000001"><span class="number-positive">$344,345.96</span></td>
+                            <td data-value="209033.59999999998"><span class="number-positive">$209,033.60</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="553379.56"><span class="number-positive">$553,379.56</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>13</td>
+                            <td>343784</td>
+                            <td>魚多多 TiNY POKER</td>
+                            <td data-value="465853.83"><span class="number-positive">$465,853.83</span></td>
+                            <td data-value="72904.13999999998"><span class="number-positive">$72,904.14</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="12360.0"><span class="number-positive">$12,360.00</span></td>
+                            <td data-value="551117.9699999997"><span class="number-positive">$551,117.97</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>14</td>
+                            <td>594575</td>
+                            <td>COOLER POKERCLUB</td>
+                            <td data-value="436988.24000000005"><span class="number-positive">$436,988.24</span></td>
+                            <td data-value="22168.66"><span class="number-positive">$22,168.66</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="4272.0"><span class="number-positive">$4,272.00</span></td>
+                            <td data-value="463428.89999999997"><span class="number-positive">$463,428.90</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>15</td>
+                            <td>717512</td>
+                            <td>TiNY POKER C (真人)</td>
+                            <td data-value="414474.6299999999"><span class="number-positive">$414,474.63</span></td>
+                            <td data-value="10500.699999999999"><span class="number-positive">$10,500.70</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="32688.0"><span class="number-positive">$32,688.00</span></td>
+                            <td data-value="457663.3299999999"><span class="number-positive">$457,663.33</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>16</td>
+                            <td>718000</td>
+                            <td>OVERBANKROLL</td>
+                            <td data-value="381380.7500000002"><span class="number-positive">$381,380.75</span></td>
+                            <td data-value="17864.590000000004"><span class="number-positive">$17,864.59</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="19770.0"><span class="number-positive">$19,770.00</span></td>
+                            <td data-value="419015.34000000014"><span class="number-positive">$419,015.34</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>17</td>
+                            <td>807613</td>
+                            <td>月球人Tiny</td>
+                            <td data-value="312693.93"><span class="number-positive">$312,693.93</span></td>
+                            <td data-value="69703.24000000002"><span class="number-positive">$69,703.24</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="15252.0"><span class="number-positive">$15,252.00</span></td>
+                            <td data-value="397649.17"><span class="number-positive">$397,649.17</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>18</td>
+                            <td>674929</td>
+                            <td>Monopoly andco G</td>
+                            <td data-value="28132.119999999995"><span class="number-positive">$28,132.12</span></td>
+                            <td data-value="1360.27"><span class="number-positive">$1,360.27</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="96.0"><span class="number-positive">$96.00</span></td>
+                            <td data-value="29588.390000000003"><span class="number-positive">$29,588.39</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>19</td>
+                            <td>817544</td>
+                            <td>Lamborghini</td>
+                            <td data-value="11908.160000000003"><span class="number-positive">$11,908.16</span></td>
+                            <td data-value="4581.48"><span class="number-positive">$4,581.48</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="5576.0"><span class="number-positive">$5,576.00</span></td>
+                            <td data-value="22065.64"><span class="number-positive">$22,065.64</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>20</td>
+                            <td>917665</td>
+                            <td>小皇朝club</td>
+                            <td data-value="14500.92"><span class="number-positive">$14,500.92</span></td>
+                            <td data-value="544.68"><span class="number-positive">$544.68</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="15045.599999999999"><span class="number-positive">$15,045.60</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>21</td>
+                            <td>337739</td>
+                            <td>Fishing Chips</td>
+                            <td data-value="6391.42"><span class="number-positive">$6,391.42</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="144.0"><span class="number-positive">$144.00</span></td>
+                            <td data-value="6535.42"><span class="number-positive">$6,535.42</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>22</td>
+                            <td>311681</td>
+                            <td>Formosa Tiny</td>
+                            <td data-value="955.18"><span class="number-positive">$955.18</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="955.18"><span class="number-positive">$955.18</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Week 1 數據區塊 -->
+        <div id="data-20251213-20251221" class="data-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">總俱樂部數</div>
+                    <div class="stat-value">20</div>
+                </div>
+                <div class="stat-card partner">
+                    <div class="stat-label">合作夥伴</div>
+                    <div class="stat-value">4</div>
+                </div>
+                <div class="stat-card real">
+                    <div class="stat-label">真人俱樂部</div>
+                    <div class="stat-value">16</div>
+                </div>
+            </div>
+            
+            <div class="summary-section total-section">
+                <h3>📊 總體數據匯總 - Week 1 (20251213-20251221)</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$6,008,278.10</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$3,967,981.69</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$467,478.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$10,443,737.79</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-section partner-section">
+                <h3>🤝 合作夥伴數據 - Week 1 (20251213-20251221)</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$3,665,479.63</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$2,610,082.23</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$358,536.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$6,634,097.86</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-section real-section">
+                <h3>👥 真人俱樂部數據 - Week 1 (20251213-20251221)</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$2,342,798.47</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$1,357,899.46</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$108,942.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$3,809,639.93</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <label>篩選:</label>
+                <select id="filterType-20251213-20251221" onchange="filterTable('20251213-20251221')">
+                    <option value="all">全部俱樂部</option>
+                    <option value="partner">僅合作夥伴</option>
+                    <option value="real">僅真人俱樂部</option>
+                </select>
+                
+                <label>搜尋:</label>
+                <input type="text" id="searchInput-20251213-20251221" oninput="filterTable('20251213-20251221')" placeholder="輸入俱樂部名稱或ID...">
+                
+                <button onclick="resetTable('20251213-20251221')">重置</button>
+                
+                <span style="margin-left: auto; color: #666;">
+                    顯示: <span id="displayCount-20251213-20251221">20</span> / 20 個俱樂部
+                </span>
+            </div>
+            
+            <div class="table-container">
+                <table id="dataTable-20251213-20251221">
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortTable('20251213-20251221', 0)">#</th>
+                            <th class="sortable" onclick="sortTable('20251213-20251221', 1)">俱樂部ID</th>
+                            <th class="sortable" onclick="sortTable('20251213-20251221', 2)">俱樂部名稱</th>
+                            <th class="sortable" onclick="sortTable('20251213-20251221', 3)">NLH+PLO</th>
+                            <th class="sortable" onclick="sortTable('20251213-20251221', 4)">AOF</th>
+                            <th class="sortable" onclick="sortTable('20251213-20251221', 5)">SNG</th>
+                            <th class="sortable" onclick="sortTable('20251213-20251221', 6)">MTT</th>
+                            <th class="sortable" onclick="sortTable('20251213-20251221', 7)">總服務費</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>1</td>
+                            <td>909051</td>
+                            <td>Lucky Beans Tiny<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="1826318.7200000004"><span class="number-positive">$1,826,318.72</span></td>
+                            <td data-value="1721590.1900000009"><span class="number-positive">$1,721,590.19</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="3547908.9099999983"><span class="number-positive">$3,547,908.91</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>2</td>
+                            <td>717512</td>
+                            <td>TiNY POKER C (合作夥伴)<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="761280.97"><span class="number-positive">$761,280.97</span></td>
+                            <td data-value="384864.88999999996"><span class="number-positive">$384,864.89</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="136104.0"><span class="number-positive">$136,104.00</span></td>
+                            <td data-value="1282249.8599999999"><span class="number-positive">$1,282,249.86</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>3</td>
+                            <td>954109</td>
+                            <td>快樂呱Tiny</td>
+                            <td data-value="270600.0099999998"><span class="number-positive">$270,600.01</span></td>
+                            <td data-value="975608.2"><span class="number-positive">$975,608.20</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="14504.0"><span class="number-positive">$14,504.00</span></td>
+                            <td data-value="1260712.21"><span class="number-positive">$1,260,712.21</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>4</td>
+                            <td>777080</td>
+                            <td>TiNY POKER (合作夥伴)<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="845280.4700000004"><span class="number-positive">$845,280.47</span></td>
+                            <td data-value="267137.75999999995"><span class="number-positive">$267,137.76</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="139396.0"><span class="number-positive">$139,396.00</span></td>
+                            <td data-value="1251814.2299999997"><span class="number-positive">$1,251,814.23</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>5</td>
+                            <td>951843</td>
+                            <td>Tiny2Pair<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="232599.46999999997"><span class="number-positive">$232,599.47</span></td>
+                            <td data-value="236489.39000000004"><span class="number-positive">$236,489.39</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="83036.0"><span class="number-positive">$83,036.00</span></td>
+                            <td data-value="552124.86"><span class="number-positive">$552,124.86</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>6</td>
+                            <td>781872</td>
+                            <td>海王CLUB TiNY</td>
+                            <td data-value="442801.0999999999"><span class="number-positive">$442,801.10</span></td>
+                            <td data-value="94139.69"><span class="number-positive">$94,139.69</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="13120.0"><span class="number-positive">$13,120.00</span></td>
+                            <td data-value="550060.7899999998"><span class="number-positive">$550,060.79</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>7</td>
+                            <td>177747</td>
+                            <td>高機能組Tiny</td>
+                            <td data-value="250562.79000000012"><span class="number-positive">$250,562.79</span></td>
+                            <td data-value="92399.94999999998"><span class="number-positive">$92,399.95</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="17972.0"><span class="number-positive">$17,972.00</span></td>
+                            <td data-value="360934.73999999993"><span class="number-positive">$360,934.74</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>8</td>
+                            <td>343784</td>
+                            <td>魚多多 TiNY POKER</td>
+                            <td data-value="234841.40000000002"><span class="number-positive">$234,841.40</span></td>
+                            <td data-value="35727.07"><span class="number-positive">$35,727.07</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="4132.0"><span class="number-positive">$4,132.00</span></td>
+                            <td data-value="274700.47"><span class="number-positive">$274,700.47</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>9</td>
+                            <td>864497</td>
+                            <td>Tiny Peach Poker</td>
+                            <td data-value="179620.18"><span class="number-positive">$179,620.18</span></td>
+                            <td data-value="58395.48"><span class="number-positive">$58,395.48</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="1336.0"><span class="number-positive">$1,336.00</span></td>
+                            <td data-value="239351.66"><span class="number-positive">$239,351.66</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>10</td>
+                            <td>718000</td>
+                            <td>OVERBANKROLL</td>
+                            <td data-value="184748.4"><span class="number-positive">$184,748.40</span></td>
+                            <td data-value="13337.079999999998"><span class="number-positive">$13,337.08</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="6466.0"><span class="number-positive">$6,466.00</span></td>
+                            <td data-value="204551.48"><span class="number-positive">$204,551.48</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>11</td>
+                            <td>777080</td>
+                            <td>TiNY POKER (真人)</td>
+                            <td data-value="146117.78999999998"><span class="number-positive">$146,117.79</span></td>
+                            <td data-value="11632.529999999999"><span class="number-positive">$11,632.53</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="27464.0"><span class="number-positive">$27,464.00</span></td>
+                            <td data-value="185214.32"><span class="number-positive">$185,214.32</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>12</td>
+                            <td>356185</td>
+                            <td>天翔Gotiny</td>
+                            <td data-value="138847.99000000002"><span class="number-positive">$138,847.99</span></td>
+                            <td data-value="26812.91"><span class="number-positive">$26,812.91</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="6880.0"><span class="number-positive">$6,880.00</span></td>
+                            <td data-value="172540.90000000002"><span class="number-positive">$172,540.90</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>13</td>
+                            <td>993970</td>
+                            <td>TPA Tiny</td>
+                            <td data-value="158185.53"><span class="number-positive">$158,185.53</span></td>
+                            <td data-value="4414.469999999999"><span class="number-positive">$4,414.47</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="3968.0"><span class="number-positive">$3,968.00</span></td>
+                            <td data-value="166567.99999999997"><span class="number-positive">$166,568.00</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>14</td>
+                            <td>807613</td>
+                            <td>月球人Tiny</td>
+                            <td data-value="97480.59999999992"><span class="number-positive">$97,480.60</span></td>
+                            <td data-value="40377.61999999999"><span class="number-positive">$40,377.62</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="3940.0"><span class="number-positive">$3,940.00</span></td>
+                            <td data-value="141798.21999999988"><span class="number-positive">$141,798.22</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>15</td>
+                            <td>717512</td>
+                            <td>TiNY POKER C (真人)</td>
+                            <td data-value="108315.90000000001"><span class="number-positive">$108,315.90</span></td>
+                            <td data-value="2905.4300000000003"><span class="number-positive">$2,905.43</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="6880.0"><span class="number-positive">$6,880.00</span></td>
+                            <td data-value="118101.32999999999"><span class="number-positive">$118,101.33</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>16</td>
+                            <td>594575</td>
+                            <td>COOLER POKERCLUB</td>
+                            <td data-value="101915.11"><span class="number-positive">$101,915.11</span></td>
+                            <td data-value="876.16"><span class="number-positive">$876.16</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="2124.0"><span class="number-positive">$2,124.00</span></td>
+                            <td data-value="104915.27"><span class="number-positive">$104,915.27</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>17</td>
+                            <td>917665</td>
+                            <td>小皇朝club</td>
+                            <td data-value="14456.0"><span class="number-positive">$14,456.00</span></td>
+                            <td data-value="544.68"><span class="number-positive">$544.68</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="15000.679999999998"><span class="number-positive">$15,000.68</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>18</td>
+                            <td>674929</td>
+                            <td>Monopoly andco W</td>
+                            <td data-value="11479.630000000001"><span class="number-positive">$11,479.63</span></td>
+                            <td data-value="207.54"><span class="number-positive">$207.54</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="11687.169999999998"><span class="number-positive">$11,687.17</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>19</td>
+                            <td>817544</td>
+                            <td>Lamborghini</td>
+                            <td data-value="2108.68"><span class="number-positive">$2,108.68</span></td>
+                            <td data-value="520.65"><span class="number-positive">$520.65</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="156.0"><span class="number-positive">$156.00</span></td>
+                            <td data-value="2785.33"><span class="number-positive">$2,785.33</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>20</td>
+                            <td>311681</td>
+                            <td>Formosa Tiny</td>
+                            <td data-value="717.36"><span class="number-positive">$717.36</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="717.36"><span class="number-positive">$717.36</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Week 2 數據區塊 -->
+        <div id="data-20251222-20251228" class="data-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">總俱樂部數</div>
+                    <div class="stat-value">21</div>
+                </div>
+                <div class="stat-card partner">
+                    <div class="stat-label">合作夥伴</div>
+                    <div class="stat-value">4</div>
+                </div>
+                <div class="stat-card real">
+                    <div class="stat-label">真人俱樂部</div>
+                    <div class="stat-value">17</div>
+                </div>
+            </div>
+            
+            <div class="summary-section total-section">
+                <h3>📊 總體數據匯總 - Week 2 (20251222-20251228)</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$3,633,241.21</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$2,819,548.35</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$581,928.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$7,034,717.56</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-section partner-section">
+                <h3>🤝 合作夥伴數據 - Week 2 (20251222-20251228)</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$2,231,874.33</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$1,830,008.70</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$475,696.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$4,537,579.03</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-section real-section">
+                <h3>👥 真人俱樂部數據 - Week 2 (20251222-20251228)</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$1,401,366.88</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$989,539.65</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$106,232.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$2,497,138.53</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <label>篩選:</label>
+                <select id="filterType-20251222-20251228" onchange="filterTable('20251222-20251228')">
+                    <option value="all">全部俱樂部</option>
+                    <option value="partner">僅合作夥伴</option>
+                    <option value="real">僅真人俱樂部</option>
+                </select>
+                
+                <label>搜尋:</label>
+                <input type="text" id="searchInput-20251222-20251228" oninput="filterTable('20251222-20251228')" placeholder="輸入俱樂部名稱或ID...">
+                
+                <button onclick="resetTable('20251222-20251228')">重置</button>
+                
+                <span style="margin-left: auto; color: #666;">
+                    顯示: <span id="displayCount-20251222-20251228">21</span> / 21 個俱樂部
+                </span>
+            </div>
+            
+            <div class="table-container">
+                <table id="dataTable-20251222-20251228">
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortTable('20251222-20251228', 0)">#</th>
+                            <th class="sortable" onclick="sortTable('20251222-20251228', 1)">俱樂部ID</th>
+                            <th class="sortable" onclick="sortTable('20251222-20251228', 2)">俱樂部名稱</th>
+                            <th class="sortable" onclick="sortTable('20251222-20251228', 3)">NLH+PLO</th>
+                            <th class="sortable" onclick="sortTable('20251222-20251228', 4)">AOF</th>
+                            <th class="sortable" onclick="sortTable('20251222-20251228', 5)">SNG</th>
+                            <th class="sortable" onclick="sortTable('20251222-20251228', 6)">MTT</th>
+                            <th class="sortable" onclick="sortTable('20251222-20251228', 7)">總服務費</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>1</td>
+                            <td>717512</td>
+                            <td>TiNY POKER C (合作夥伴)<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="1047966.3699999998"><span class="number-positive">$1,047,966.37</span></td>
+                            <td data-value="467168.26999999984"><span class="number-positive">$467,168.27</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="389524.0"><span class="number-positive">$389,524.00</span></td>
+                            <td data-value="1904658.6400000006"><span class="number-positive">$1,904,658.64</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>2</td>
+                            <td>909051</td>
+                            <td>Lucky Beans Tiny<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="767533.1200000001"><span class="number-positive">$767,533.12</span></td>
+                            <td data-value="798105.7899999999"><span class="number-positive">$798,105.79</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="1565638.9100000004"><span class="number-positive">$1,565,638.91</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>3</td>
+                            <td>951843</td>
+                            <td>Tiny2Pair<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="416374.84"><span class="number-positive">$416,374.84</span></td>
+                            <td data-value="564734.6400000002"><span class="number-positive">$564,734.64</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="78116.0"><span class="number-positive">$78,116.00</span></td>
+                            <td data-value="1059225.4799999995"><span class="number-positive">$1,059,225.48</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>4</td>
+                            <td>954109</td>
+                            <td>快樂呱Tiny</td>
+                            <td data-value="269747.9699999999"><span class="number-positive">$269,747.97</span></td>
+                            <td data-value="550951.84"><span class="number-positive">$550,951.84</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="13574.0"><span class="number-positive">$13,574.00</span></td>
+                            <td data-value="834273.8099999998"><span class="number-positive">$834,273.81</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>5</td>
+                            <td>781872</td>
+                            <td>海王CLUB TiNY</td>
+                            <td data-value="220175.45999999996"><span class="number-positive">$220,175.46</span></td>
+                            <td data-value="199096.99"><span class="number-positive">$199,096.99</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="11492.0"><span class="number-positive">$11,492.00</span></td>
+                            <td data-value="430764.44999999995"><span class="number-positive">$430,764.45</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>6</td>
+                            <td>177747</td>
+                            <td>高機能組Tiny</td>
+                            <td data-value="119933.93000000001"><span class="number-positive">$119,933.93</span></td>
+                            <td data-value="53229.42"><span class="number-positive">$53,229.42</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="13050.0"><span class="number-positive">$13,050.00</span></td>
+                            <td data-value="186213.35"><span class="number-positive">$186,213.35</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>7</td>
+                            <td>993970</td>
+                            <td>TPA Tiny</td>
+                            <td data-value="166963.15000000002"><span class="number-positive">$166,963.15</span></td>
+                            <td data-value="6909.83"><span class="number-positive">$6,909.83</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="4688.0"><span class="number-positive">$4,688.00</span></td>
+                            <td data-value="178560.97999999995"><span class="number-positive">$178,560.98</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>8</td>
+                            <td>356185</td>
+                            <td>天翔Gotiny</td>
+                            <td data-value="87333.86"><span class="number-positive">$87,333.86</span></td>
+                            <td data-value="65517.42"><span class="number-positive">$65,517.42</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="2716.0"><span class="number-positive">$2,716.00</span></td>
+                            <td data-value="155567.28"><span class="number-positive">$155,567.28</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>9</td>
+                            <td>777080</td>
+                            <td>TiNY POKER (真人)</td>
+                            <td data-value="96220.16000000002"><span class="number-positive">$96,220.16</span></td>
+                            <td data-value="4478.290000000001"><span class="number-positive">$4,478.29</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="28100.0"><span class="number-positive">$28,100.00</span></td>
+                            <td data-value="128798.45"><span class="number-positive">$128,798.45</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>10</td>
+                            <td>864497</td>
+                            <td>Tiny Peach Poker</td>
+                            <td data-value="55962.219999999994"><span class="number-positive">$55,962.22</span></td>
+                            <td data-value="67394.35"><span class="number-positive">$67,394.35</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="2240.0"><span class="number-positive">$2,240.00</span></td>
+                            <td data-value="125596.57"><span class="number-positive">$125,596.57</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>11</td>
+                            <td>343784</td>
+                            <td>魚多多 TiNY POKER</td>
+                            <td data-value="100384.47000000002"><span class="number-positive">$100,384.47</span></td>
+                            <td data-value="14729.189999999999"><span class="number-positive">$14,729.19</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="3524.0"><span class="number-positive">$3,524.00</span></td>
+                            <td data-value="118637.66000000002"><span class="number-positive">$118,637.66</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>12</td>
+                            <td>718000</td>
+                            <td>OVERBANKROLL</td>
+                            <td data-value="84583.29999999997"><span class="number-positive">$84,583.30</span></td>
+                            <td data-value="1951.43"><span class="number-positive">$1,951.43</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="7216.0"><span class="number-positive">$7,216.00</span></td>
+                            <td data-value="93750.73"><span class="number-positive">$93,750.73</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>13</td>
+                            <td>717512</td>
+                            <td>TiNY POKER C (真人)</td>
+                            <td data-value="72247.45000000001"><span class="number-positive">$72,247.45</span></td>
+                            <td data-value="4005.2999999999997"><span class="number-positive">$4,005.30</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="13060.0"><span class="number-positive">$13,060.00</span></td>
+                            <td data-value="89312.75000000001"><span class="number-positive">$89,312.75</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>14</td>
+                            <td>807613</td>
+                            <td>月球人Tiny</td>
+                            <td data-value="65307.12000000001"><span class="number-positive">$65,307.12</span></td>
+                            <td data-value="9470.539999999999"><span class="number-positive">$9,470.54</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="3772.0"><span class="number-positive">$3,772.00</span></td>
+                            <td data-value="78549.66000000002"><span class="number-positive">$78,549.66</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>15</td>
+                            <td>594575</td>
+                            <td>COOLER POKERCLUB</td>
+                            <td data-value="50211.189999999995"><span class="number-positive">$50,211.19</span></td>
+                            <td data-value="11033.240000000002"><span class="number-positive">$11,033.24</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="1176.0"><span class="number-positive">$1,176.00</span></td>
+                            <td data-value="62420.42999999999"><span class="number-positive">$62,420.43</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>16</td>
+                            <td>777080</td>
+                            <td>TiNY POKER (合作夥伴)<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="8056.0"><span class="number-positive">$8,056.00</span></td>
+                            <td data-value="8056.0"><span class="number-positive">$8,056.00</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>17</td>
+                            <td>674929</td>
+                            <td>Monopoly andco G</td>
+                            <td data-value="7063.040000000001"><span class="number-positive">$7,063.04</span></td>
+                            <td data-value="581.05"><span class="number-positive">$581.05</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="96.0"><span class="number-positive">$96.00</span></td>
+                            <td data-value="7740.09"><span class="number-positive">$7,740.09</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>18</td>
+                            <td>817544</td>
+                            <td>Lamborghini</td>
+                            <td data-value="4847.969999999999"><span class="number-positive">$4,847.97</span></td>
+                            <td data-value="190.76"><span class="number-positive">$190.76</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="1528.0"><span class="number-positive">$1,528.00</span></td>
+                            <td data-value="6566.7300000000005"><span class="number-positive">$6,566.73</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>19</td>
+                            <td>311681</td>
+                            <td>Formosa Tiny</td>
+                            <td data-value="237.82"><span class="number-positive">$237.82</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="237.82"><span class="number-positive">$237.82</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>20</td>
+                            <td>337739</td>
+                            <td>Fishing Chips</td>
+                            <td data-value="102.85"><span class="number-positive">$102.85</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="102.85"><span class="number-positive">$102.85</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>21</td>
+                            <td>917665</td>
+                            <td>小皇朝club</td>
+                            <td data-value="44.92"><span class="number-positive">$44.92</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="44.92"><span class="number-positive">$44.92</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Week 3 數據區塊 -->
+        <div id="data-20251229-20260104" class="data-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">總俱樂部數</div>
+                    <div class="stat-value">18</div>
+                </div>
+                <div class="stat-card partner">
+                    <div class="stat-label">合作夥伴</div>
+                    <div class="stat-value">4</div>
+                </div>
+                <div class="stat-card real">
+                    <div class="stat-label">真人俱樂部</div>
+                    <div class="stat-value">14</div>
+                </div>
+            </div>
+            
+            <div class="summary-section total-section">
+                <h3>📊 總體數據匯總 - Week 3 (20251229-20260104)</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$4,343,329.05</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$1,456,316.53</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$548,884.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$6,348,529.58</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-section partner-section">
+                <h3>🤝 合作夥伴數據 - Week 3 (20251229-20260104)</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$2,648,618.39</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$965,824.01</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$475,652.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$4,090,094.40</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-section real-section">
+                <h3>👥 真人俱樂部數據 - Week 3 (20251229-20260104)</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$1,694,710.66</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$490,492.52</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$73,232.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$2,258,435.18</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <label>篩選:</label>
+                <select id="filterType-20251229-20260104" onchange="filterTable('20251229-20260104')">
+                    <option value="all">全部俱樂部</option>
+                    <option value="partner">僅合作夥伴</option>
+                    <option value="real">僅真人俱樂部</option>
+                </select>
+                
+                <label>搜尋:</label>
+                <input type="text" id="searchInput-20251229-20260104" oninput="filterTable('20251229-20260104')" placeholder="輸入俱樂部名稱或ID...">
+                
+                <button onclick="resetTable('20251229-20260104')">重置</button>
+                
+                <span style="margin-left: auto; color: #666;">
+                    顯示: <span id="displayCount-20251229-20260104">18</span> / 18 個俱樂部
+                </span>
+            </div>
+            
+            <div class="table-container">
+                <table id="dataTable-20251229-20260104">
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortTable('20251229-20260104', 0)">#</th>
+                            <th class="sortable" onclick="sortTable('20251229-20260104', 1)">俱樂部ID</th>
+                            <th class="sortable" onclick="sortTable('20251229-20260104', 2)">俱樂部名稱</th>
+                            <th class="sortable" onclick="sortTable('20251229-20260104', 3)">NLH+PLO</th>
+                            <th class="sortable" onclick="sortTable('20251229-20260104', 4)">AOF</th>
+                            <th class="sortable" onclick="sortTable('20251229-20260104', 5)">SNG</th>
+                            <th class="sortable" onclick="sortTable('20251229-20260104', 6)">MTT</th>
+                            <th class="sortable" onclick="sortTable('20251229-20260104', 7)">總服務費</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>1</td>
+                            <td>717512</td>
+                            <td>TiNY POKER C (合作夥伴)<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="1355405.32"><span class="number-positive">$1,355,405.32</span></td>
+                            <td data-value="326414.52000000014"><span class="number-positive">$326,414.52</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="404656.0"><span class="number-positive">$404,656.00</span></td>
+                            <td data-value="2086475.8400000003"><span class="number-positive">$2,086,475.84</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>2</td>
+                            <td>909051</td>
+                            <td>Lucky Beans Tiny<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="708429.6400000006"><span class="number-positive">$708,429.64</span></td>
+                            <td data-value="374270.52000000014"><span class="number-positive">$374,270.52</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="1082700.1600000006"><span class="number-positive">$1,082,700.16</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>3</td>
+                            <td>951843</td>
+                            <td>Tiny2Pair<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="419658.57"><span class="number-positive">$419,658.57</span></td>
+                            <td data-value="187781.49000000002"><span class="number-positive">$187,781.49</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="70996.0"><span class="number-positive">$70,996.00</span></td>
+                            <td data-value="678436.0599999999"><span class="number-positive">$678,436.06</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>4</td>
+                            <td>356185</td>
+                            <td>天翔Gotiny</td>
+                            <td data-value="115693.33"><span class="number-positive">$115,693.33</span></td>
+                            <td data-value="231117.35"><span class="number-positive">$231,117.35</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="4308.0"><span class="number-positive">$4,308.00</span></td>
+                            <td data-value="351118.68000000005"><span class="number-positive">$351,118.68</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>5</td>
+                            <td>781872</td>
+                            <td>海王CLUB TiNY</td>
+                            <td data-value="255475.91000000006"><span class="number-positive">$255,475.91</span></td>
+                            <td data-value="51412.219999999994"><span class="number-positive">$51,412.22</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="9204.0"><span class="number-positive">$9,204.00</span></td>
+                            <td data-value="316092.13000000006"><span class="number-positive">$316,092.13</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>6</td>
+                            <td>781373</td>
+                            <td>Tiny Boba island<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="165124.86"><span class="number-positive">$165,124.86</span></td>
+                            <td data-value="77357.47999999998"><span class="number-positive">$77,357.48</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="242482.33999999997"><span class="number-positive">$242,482.34</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>7</td>
+                            <td>954109</td>
+                            <td>快樂呱Tiny</td>
+                            <td data-value="189267.37000000005"><span class="number-positive">$189,267.37</span></td>
+                            <td data-value="30578.449999999993"><span class="number-positive">$30,578.45</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="12588.0"><span class="number-positive">$12,588.00</span></td>
+                            <td data-value="232433.82000000004"><span class="number-positive">$232,433.82</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>8</td>
+                            <td>993970</td>
+                            <td>TPA Tiny</td>
+                            <td data-value="126043.44999999997"><span class="number-positive">$126,043.45</span></td>
+                            <td data-value="102846.49"><span class="number-positive">$102,846.49</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="3168.0"><span class="number-positive">$3,168.00</span></td>
+                            <td data-value="232057.94"><span class="number-positive">$232,057.94</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>9</td>
+                            <td>177747</td>
+                            <td>高機能組Tiny</td>
+                            <td data-value="170316.84000000003"><span class="number-positive">$170,316.84</span></td>
+                            <td data-value="19723.989999999998"><span class="number-positive">$19,723.99</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="8152.0"><span class="number-positive">$8,152.00</span></td>
+                            <td data-value="198192.83000000005"><span class="number-positive">$198,192.83</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>10</td>
+                            <td>864497</td>
+                            <td>Tiny Peach Poker</td>
+                            <td data-value="172196.15"><span class="number-positive">$172,196.15</span></td>
+                            <td data-value="18356.690000000002"><span class="number-positive">$18,356.69</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="1972.0"><span class="number-positive">$1,972.00</span></td>
+                            <td data-value="192524.84"><span class="number-positive">$192,524.84</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>11</td>
+                            <td>594575</td>
+                            <td>COOLER POKERCLUB</td>
+                            <td data-value="175005.16999999998"><span class="number-positive">$175,005.17</span></td>
+                            <td data-value="9915.12"><span class="number-positive">$9,915.12</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="696.0"><span class="number-positive">$696.00</span></td>
+                            <td data-value="185616.28999999998"><span class="number-positive">$185,616.29</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>12</td>
+                            <td>777080</td>
+                            <td>TiNY POKER (真人)</td>
+                            <td data-value="139798.07000000004"><span class="number-positive">$139,798.07</span></td>
+                            <td data-value="5268.720000000001"><span class="number-positive">$5,268.72</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="16396.0"><span class="number-positive">$16,396.00</span></td>
+                            <td data-value="161462.78999999995"><span class="number-positive">$161,462.79</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>13</td>
+                            <td>717512</td>
+                            <td>TiNY POKER C (真人)</td>
+                            <td data-value="152099.74"><span class="number-positive">$152,099.74</span></td>
+                            <td data-value="2611.03"><span class="number-positive">$2,611.03</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="6596.0"><span class="number-positive">$6,596.00</span></td>
+                            <td data-value="161306.77"><span class="number-positive">$161,306.77</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>14</td>
+                            <td>807613</td>
+                            <td>月球人Tiny</td>
+                            <td data-value="73190.67999999996"><span class="number-positive">$73,190.68</span></td>
+                            <td data-value="10088.53"><span class="number-positive">$10,088.53</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="3376.0"><span class="number-positive">$3,376.00</span></td>
+                            <td data-value="86655.21000000002"><span class="number-positive">$86,655.21</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>15</td>
+                            <td>718000</td>
+                            <td>OVERBANKROLL</td>
+                            <td data-value="68477.65999999999"><span class="number-positive">$68,477.66</span></td>
+                            <td data-value="1671.4700000000003"><span class="number-positive">$1,671.47</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="2476.0"><span class="number-positive">$2,476.00</span></td>
+                            <td data-value="72625.13"><span class="number-positive">$72,625.13</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>16</td>
+                            <td>343784</td>
+                            <td>魚多多 TiNY POKER</td>
+                            <td data-value="48279.50000000001"><span class="number-positive">$48,279.50</span></td>
+                            <td data-value="5068.1"><span class="number-positive">$5,068.10</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="1732.0"><span class="number-positive">$1,732.00</span></td>
+                            <td data-value="55079.600000000006"><span class="number-positive">$55,079.60</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>17</td>
+                            <td>817544</td>
+                            <td>Lamborghini</td>
+                            <td data-value="3832.14"><span class="number-positive">$3,832.14</span></td>
+                            <td data-value="1342.6299999999999"><span class="number-positive">$1,342.63</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="2568.0"><span class="number-positive">$2,568.00</span></td>
+                            <td data-value="7742.770000000001"><span class="number-positive">$7,742.77</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>18</td>
+                            <td>674929</td>
+                            <td>Monopoly andco G</td>
+                            <td data-value="5034.65"><span class="number-positive">$5,034.65</span></td>
+                            <td data-value="491.73"><span class="number-positive">$491.73</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="5526.379999999999"><span class="number-positive">$5,526.38</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Week 4 數據區塊 -->
+        <div id="data-20260105-20260111" class="data-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">總俱樂部數</div>
+                    <div class="stat-value">19</div>
+                </div>
+                <div class="stat-card partner">
+                    <div class="stat-label">合作夥伴</div>
+                    <div class="stat-value">4</div>
+                </div>
+                <div class="stat-card real">
+                    <div class="stat-label">真人俱樂部</div>
+                    <div class="stat-value">15</div>
+                </div>
+            </div>
+            
+            <div class="summary-section total-section">
+                <h3>📊 總體數據匯總 - Week 4 (20260105-20260111)</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$4,216,428.07</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$1,685,757.64</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$542,736.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$6,444,921.71</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-section partner-section">
+                <h3>🤝 合作夥伴數據 - Week 4 (20260105-20260111)</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$2,358,330.73</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$1,101,590.95</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$472,932.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$3,932,853.68</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-section real-section">
+                <h3>👥 真人俱樂部數據 - Week 4 (20260105-20260111)</h3>
+                
+                <div class="summary-row-title">💰 服務費分類</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>NLH+PLO</strong>
+                        <div>$1,858,097.34</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>AOF</strong>
+                        <div>$584,166.69</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>SNG</strong>
+                        <div>$0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <strong>MTT</strong>
+                        <div>$69,804.00</div>
+                    </div>
+                    <div class="summary-item total">
+                        <strong>總服務費</strong>
+                        <div>$2,512,068.03</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <label>篩選:</label>
+                <select id="filterType-20260105-20260111" onchange="filterTable('20260105-20260111')">
+                    <option value="all">全部俱樂部</option>
+                    <option value="partner">僅合作夥伴</option>
+                    <option value="real">僅真人俱樂部</option>
+                </select>
+                
+                <label>搜尋:</label>
+                <input type="text" id="searchInput-20260105-20260111" oninput="filterTable('20260105-20260111')" placeholder="輸入俱樂部名稱或ID...">
+                
+                <button onclick="resetTable('20260105-20260111')">重置</button>
+                
+                <span style="margin-left: auto; color: #666;">
+                    顯示: <span id="displayCount-20260105-20260111">19</span> / 19 個俱樂部
+                </span>
+            </div>
+            
+            <div class="table-container">
+                <table id="dataTable-20260105-20260111">
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortTable('20260105-20260111', 0)">#</th>
+                            <th class="sortable" onclick="sortTable('20260105-20260111', 1)">俱樂部ID</th>
+                            <th class="sortable" onclick="sortTable('20260105-20260111', 2)">俱樂部名稱</th>
+                            <th class="sortable" onclick="sortTable('20260105-20260111', 3)">NLH+PLO</th>
+                            <th class="sortable" onclick="sortTable('20260105-20260111', 4)">AOF</th>
+                            <th class="sortable" onclick="sortTable('20260105-20260111', 5)">SNG</th>
+                            <th class="sortable" onclick="sortTable('20260105-20260111', 6)">MTT</th>
+                            <th class="sortable" onclick="sortTable('20260105-20260111', 7)">總服務費</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>1</td>
+                            <td>717512</td>
+                            <td>TiNY POKER C (合作夥伴)<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="1359629.98"><span class="number-positive">$1,359,629.98</span></td>
+                            <td data-value="383838.1700000001"><span class="number-positive">$383,838.17</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="401120.0"><span class="number-positive">$401,120.00</span></td>
+                            <td data-value="2144588.149999999"><span class="number-positive">$2,144,588.15</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>2</td>
+                            <td>909051</td>
+                            <td>Lucky Beans Tiny<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="529305.8399999999"><span class="number-positive">$529,305.84</span></td>
+                            <td data-value="367256.24999999994"><span class="number-positive">$367,256.25</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="896562.0899999997"><span class="number-positive">$896,562.09</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>3</td>
+                            <td>951843</td>
+                            <td>Tiny2Pair<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="290173.8099999999"><span class="number-positive">$290,173.81</span></td>
+                            <td data-value="218820.41"><span class="number-positive">$218,820.41</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="71812.0"><span class="number-positive">$71,812.00</span></td>
+                            <td data-value="580806.2200000001"><span class="number-positive">$580,806.22</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>4</td>
+                            <td>954109</td>
+                            <td>快樂呱Tiny</td>
+                            <td data-value="445532.83999999997"><span class="number-positive">$445,532.84</span></td>
+                            <td data-value="53747.259999999995"><span class="number-positive">$53,747.26</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="14692.0"><span class="number-positive">$14,692.00</span></td>
+                            <td data-value="513972.09999999986"><span class="number-positive">$513,972.10</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>5</td>
+                            <td>781872</td>
+                            <td>海王CLUB TiNY</td>
+                            <td data-value="321047.8099999998"><span class="number-positive">$321,047.81</span></td>
+                            <td data-value="85668.25"><span class="number-positive">$85,668.25</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="7640.0"><span class="number-positive">$7,640.00</span></td>
+                            <td data-value="414356.0599999999"><span class="number-positive">$414,356.06</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>6</td>
+                            <td>356185</td>
+                            <td>天翔Gotiny</td>
+                            <td data-value="93076.87000000001"><span class="number-positive">$93,076.87</span></td>
+                            <td data-value="274121.61000000004"><span class="number-positive">$274,121.61</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="2492.0"><span class="number-positive">$2,492.00</span></td>
+                            <td data-value="369690.48"><span class="number-positive">$369,690.48</span></td>
+                        </tr>
+                        <tr class="partner-row" data-is-partner="true">
+                            <td>7</td>
+                            <td>781373</td>
+                            <td>Tiny Boba island<span class="partner-badge">合作夥伴</span></td>
+                            <td data-value="179221.1"><span class="number-positive">$179,221.10</span></td>
+                            <td data-value="131676.12"><span class="number-positive">$131,676.12</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="310897.22"><span class="number-positive">$310,897.22</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>8</td>
+                            <td>993970</td>
+                            <td>TPA Tiny</td>
+                            <td data-value="134603.42"><span class="number-positive">$134,603.42</span></td>
+                            <td data-value="93822.73000000001"><span class="number-positive">$93,822.73</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="1528.0"><span class="number-positive">$1,528.00</span></td>
+                            <td data-value="229954.15000000002"><span class="number-positive">$229,954.15</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>9</td>
+                            <td>777080</td>
+                            <td>TiNY POKER (真人)</td>
+                            <td data-value="189556.36999999997"><span class="number-positive">$189,556.37</span></td>
+                            <td data-value="7231.98"><span class="number-positive">$7,231.98</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="12728.0"><span class="number-positive">$12,728.00</span></td>
+                            <td data-value="209516.34999999998"><span class="number-positive">$209,516.35</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>10</td>
+                            <td>177747</td>
+                            <td>高機能組Tiny</td>
+                            <td data-value="129214.13999999996"><span class="number-positive">$129,214.14</span></td>
+                            <td data-value="37116.78999999999"><span class="number-positive">$37,116.79</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="9984.0"><span class="number-positive">$9,984.00</span></td>
+                            <td data-value="176314.92999999996"><span class="number-positive">$176,314.93</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>11</td>
+                            <td>864497</td>
+                            <td>Tiny Peach Poker</td>
+                            <td data-value="138799.46000000002"><span class="number-positive">$138,799.46</span></td>
+                            <td data-value="476.65999999999997"><span class="number-positive">$476.66</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="2096.0"><span class="number-positive">$2,096.00</span></td>
+                            <td data-value="141372.12000000005"><span class="number-positive">$141,372.12</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>12</td>
+                            <td>594575</td>
+                            <td>COOLER POKERCLUB</td>
+                            <td data-value="109856.77000000002"><span class="number-positive">$109,856.77</span></td>
+                            <td data-value="344.14"><span class="number-positive">$344.14</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="276.0"><span class="number-positive">$276.00</span></td>
+                            <td data-value="110476.91"><span class="number-positive">$110,476.91</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>13</td>
+                            <td>343784</td>
+                            <td>魚多多 TiNY POKER</td>
+                            <td data-value="82348.46000000002"><span class="number-positive">$82,348.46</span></td>
+                            <td data-value="17379.780000000002"><span class="number-positive">$17,379.78</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="2972.0"><span class="number-positive">$2,972.00</span></td>
+                            <td data-value="102700.24000000002"><span class="number-positive">$102,700.24</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>14</td>
+                            <td>807613</td>
+                            <td>月球人Tiny</td>
+                            <td data-value="76715.52999999997"><span class="number-positive">$76,715.53</span></td>
+                            <td data-value="9766.550000000001"><span class="number-positive">$9,766.55</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="4164.0"><span class="number-positive">$4,164.00</span></td>
+                            <td data-value="90646.07999999999"><span class="number-positive">$90,646.08</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>15</td>
+                            <td>717512</td>
+                            <td>TiNY POKER C (真人)</td>
+                            <td data-value="81811.54000000002"><span class="number-positive">$81,811.54</span></td>
+                            <td data-value="978.9399999999999"><span class="number-positive">$978.94</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="6152.0"><span class="number-positive">$6,152.00</span></td>
+                            <td data-value="88942.48000000001"><span class="number-positive">$88,942.48</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>16</td>
+                            <td>718000</td>
+                            <td>OVERBANKROLL</td>
+                            <td data-value="43571.389999999985"><span class="number-positive">$43,571.39</span></td>
+                            <td data-value="904.61"><span class="number-positive">$904.61</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="3612.0"><span class="number-positive">$3,612.00</span></td>
+                            <td data-value="48087.999999999985"><span class="number-positive">$48,088.00</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>17</td>
+                            <td>337739</td>
+                            <td>Fishing Chips</td>
+                            <td data-value="6288.57"><span class="number-positive">$6,288.57</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="144.0"><span class="number-positive">$144.00</span></td>
+                            <td data-value="6432.57"><span class="number-positive">$6,432.57</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>18</td>
+                            <td>817544</td>
+                            <td>Lamborghini</td>
+                            <td data-value="1119.3700000000001"><span class="number-positive">$1,119.37</span></td>
+                            <td data-value="2527.44"><span class="number-positive">$2,527.44</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="1324.0"><span class="number-positive">$1,324.00</span></td>
+                            <td data-value="4970.8099999999995"><span class="number-positive">$4,970.81</span></td>
+                        </tr>
+                        <tr class="" data-is-partner="false">
+                            <td>19</td>
+                            <td>674929</td>
+                            <td>Monopoly andco G</td>
+                            <td data-value="4554.8"><span class="number-positive">$4,554.80</span></td>
+                            <td data-value="79.94999999999999"><span class="number-positive">$79.95</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="0.0"><span class="number-neutral">$0.00</span></td>
+                            <td data-value="4634.75"><span class="number-positive">$4,634.75</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        
+        <div class="footer">
+            <p>合作夥伴俱樂部ID: 909051, 951843, 781373</p>
+            <p>混合俱樂部（已拆分真人/合作夥伴）: 717512, 777080</p>
+            <p>合作夥伴超代ID: 5066-0727, 7043-4866</p>
+        </div>
+    </div>
+    
+    <script>
+        let sortDirections = {};
+        let currentSortColumns = {};
+        
+        function switchWeek(weekId) {
+            // 隱藏所有數據區塊
+            document.querySelectorAll('.data-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // 顯示選中的數據區塊
+            const selectedSection = document.getElementById('data-' + weekId);
+            if (selectedSection) {
+                selectedSection.classList.add('active');
+            }
+        }
+        
+        function sortTable(weekId, columnIndex) {
+            const table = document.getElementById('dataTable-' + weekId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            const sortKey = weekId + '-' + columnIndex;
+            
+            // 切換排序方向
+            if (currentSortColumns[weekId] === columnIndex) {
+                sortDirections[sortKey] = !sortDirections[sortKey];
+            } else {
+                sortDirections[sortKey] = true; // true = 降序
+                currentSortColumns[weekId] = columnIndex;
+            }
+            
+            const isDescending = sortDirections[sortKey];
+            
+            // 更新表頭樣式
+            table.querySelectorAll('th').forEach((th, idx) => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (idx === columnIndex) {
+                    th.classList.add(isDescending ? 'sort-desc' : 'sort-asc');
+                }
+            });
+            
+            // 排序
+            rows.sort((a, b) => {
+                let aValue, bValue;
+                
+                if (columnIndex === 0) {
+                    // 序號列不參與排序
+                    return 0;
+                } else if (columnIndex >= 3) {
+                    // 數值列 - 使用 data-value 屬性
+                    const aCells = a.querySelectorAll('td');
+                    const bCells = b.querySelectorAll('td');
+                    aValue = parseFloat(aCells[columnIndex].getAttribute('data-value')) || 0;
+                    bValue = parseFloat(bCells[columnIndex].getAttribute('data-value')) || 0;
+                } else {
+                    // 文字列
+                    aValue = a.cells[columnIndex].textContent.trim().toLowerCase();
+                    bValue = b.cells[columnIndex].textContent.trim().toLowerCase();
+                }
+                
+                if (aValue < bValue) return isDescending ? 1 : -1;
+                if (aValue > bValue) return isDescending ? -1 : 1;
+                return 0;
+            });
+            
+            // 重新渲染
+            rows.forEach(row => tbody.appendChild(row));
+            
+            // 更新序號
+            updateRowNumbers(weekId);
+        }
+        
+        function updateRowNumbers(weekId) {
+            const rows = document.querySelectorAll('#dataTable-' + weekId + ' tbody tr');
+            rows.forEach((row, index) => {
+                if (row.style.display !== 'none') {
+                    row.cells[0].textContent = index + 1;
+                }
+            });
+        }
+        
+        function filterTable(weekId) {
+            const filterType = document.getElementById('filterType-' + weekId).value;
+            const searchText = document.getElementById('searchInput-' + weekId).value.toLowerCase();
+            const rows = document.querySelectorAll('#dataTable-' + weekId + ' tbody tr');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                let showRow = true;
+                
+                // 篩選類型
+                if (filterType === 'partner' && row.getAttribute('data-is-partner') !== 'true') {
+                    showRow = false;
+                } else if (filterType === 'real' && row.getAttribute('data-is-partner') === 'true') {
+                    showRow = false;
+                }
+                
+                // 搜尋文字
+                if (searchText && showRow) {
+                    const clubId = row.cells[1].textContent.toLowerCase();
+                    const clubName = row.cells[2].textContent.toLowerCase();
+                    if (!clubId.includes(searchText) && !clubName.includes(searchText)) {
+                        showRow = false;
+                    }
+                }
+                
+                row.style.display = showRow ? '' : 'none';
+                if (showRow) visibleCount++;
+            });
+            
+            document.getElementById('displayCount-' + weekId).textContent = visibleCount;
+            updateRowNumbers(weekId);
+        }
+        
+        function resetTable(weekId) {
+            document.getElementById('filterType-' + weekId).value = 'all';
+            document.getElementById('searchInput-' + weekId).value = '';
+            filterTable(weekId);
+            
+            // 重置排序
+            const table = document.getElementById('dataTable-' + weekId);
+            table.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+            currentSortColumns[weekId] = -1;
+            
+            // 清除該週的排序方向
+            for (let key in sortDirections) {
+                if (key.startsWith(weekId + '-')) {
+                    delete sortDirections[key];
+                }
+            }
+        }
+        
+        // 初始化：預設按總服務費降序排序
+        window.addEventListener('load', function() {
+            sortTable('total', 7); // 總和數據的總服務費欄位
+        });
+    </script>
+</body>
+</html>
